@@ -17,6 +17,7 @@ module Rails3JQueryAutocomplete
         model          = parameters[:model]
         method         = parameters[:method]
         options        = parameters[:options]
+        class_method   = options[:class_method]
         is_full_search = options[:full]
         term           = parameters[:term]
         limit          = get_autocomplete_limit(options)
@@ -27,7 +28,13 @@ module Rails3JQueryAutocomplete
         else
           search = '^' + Regexp.escape(term)
         end
-        items  = model.where(method.to_sym => /#{search}/i).limit(limit).order_by(order)
+        search = Regexp.new(search, true)
+        query = if class_method
+          model.send(class_method.to_sym, search)
+        else
+          model.where(method.to_sym => search)
+        end
+        items = query.limit(limit).order_by(order)
       end
     end
   end
